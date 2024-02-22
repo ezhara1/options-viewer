@@ -29,5 +29,12 @@
   },
   "forwardPorts": [
     8501
-  ]
+  ],
+
+  // Added Feature
+  "features": {
+    "ghcr.io/features/jdk-install": {
+        "version": "11"
+    }
+}
 }
