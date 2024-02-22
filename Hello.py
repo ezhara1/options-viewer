@@ -1,51 +1,39 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import streamlit as st
-from streamlit.logger import get_logger
+from datetime import date
+from thetadata import ThetaClient, OptionReqType, OptionRight, DateRange, SecType
 
-LOGGER = get_logger(__name__)
+# Initialize the ThetaClient (assuming it doesn't require authentication for simplicity)
+client = ThetaClient()
 
+# Sidebar: Symbol Selection
+with client.connect():
+    symbols = client.get_roots(SecType.OPTION)
+symbol = st.sidebar.selectbox("Select Symbol", symbols)
 
-def run():
-    st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
+# Sidebar: Expiration Date Selection based on selected Symbol
+with client.connect():
+    expirations = client.get_expirations(symbol)
+expiration = st.sidebar.selectbox("Select Expiration Date", expirations)
+
+# Sidebar: Strike Price Selection based on selected Symbol and Expiration Date
+with client.connect():
+    strikes = client.get_strikes(symbol, expiration)
+strike = st.sidebar.selectbox("Select Strike Price", strikes)
+
+# Sidebar: Date Range Selection for Historical Data
+start_date = st.sidebar.date_input("Start Date", date(2023, 12, 1))
+end_date = st.sidebar.date_input("End Date", date.today())
+
+# Display Historical Option Data based on selections
+with client.connect():
+    data_details = client.get_hist_option(
+        req=OptionReqType.EOD,
+        root=symbol,
+        exp=expiration,
+        strike=strike,
+        right=OptionRight.CALL,  # Assuming CALL for simplicity, adjust as needed
+        date_range=DateRange(start_date, end_date)
     )
 
-    st.write("# Welcome to Streamlit! 👋")
-
-    st.sidebar.success("Select a demo above.")
-
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
-
-
-if __name__ == "__main__":
-    run()
+# Main window: Show the DataFrame
+st.dataframe(data_details)
