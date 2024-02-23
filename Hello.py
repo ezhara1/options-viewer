@@ -24,6 +24,15 @@ strike = st.sidebar.selectbox("Select Strike Price", strikes)
 start_date = st.sidebar.date_input("Start Date", date(2023, 12, 1))
 end_date = st.sidebar.date_input("End Date", date.today())
 
+#provide code to assign default values to symbols = META, expirations = 2024-03-15, strikes = 800 if the user does not select any value
+if symbols == None:
+    symbol = 'META'
+if expirations == None:
+    expiration = '2024-03-15'
+if strikes == None:
+    strike = 800
+
+
 # Display Historical Option Data based on selections
 with client.connect():
     data_details = client.get_hist_option(
